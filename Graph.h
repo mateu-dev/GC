@@ -1,8 +1,8 @@
 #pragma once
 
-#include <concepts>
 #include <fstream>
 #include <iostream>
+#include <type_traits>
 
 #define DEBUG
 
@@ -18,7 +18,7 @@ class Graph
 protected:
 	int node_count;
 
-	T* nodes;
+	T** nodes;
 	bool* adjacency_matrix;
 public:
 	static Graph<T>* LoadGraph(const char* filename);
@@ -29,6 +29,9 @@ public:
 	void AddEdge(const int& from, const int& to);
 	void RemoveEdge(const int& from, const int& to);
 	bool ExistsEdge(const int& from, const int& to);
+
+	T* GetNode(const int& index) { return nodes[index]; }
+	void SetNode(const int& index, T* node) { nodes[index] = node; }
 };
 
 template<typename T>
@@ -58,7 +61,7 @@ inline Graph<T>::Graph(const int& node_count) :
 	adjacency_matrix(new bool[node_count * node_count] {})
 {
 	if constexpr (!std::is_void_v<T>)
-		nodes = new T[node_count];
+		nodes = new T * [node_count];
 }
 
 template<typename T>

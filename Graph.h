@@ -77,9 +77,6 @@ Graph<T>::~Graph()
 template<typename T>
 void Graph<T>::AddEdge(const int& from, const int& to)
 {
-	if (from < 0 || from >= node_count || to < 0 || to >= node_count)
-		throw "AddEdge: index out of range";
-
 	adjacency_matrix[from * node_count + to] = 1;
 	adjacency_matrix[to * node_count + from] = 1;
 }
@@ -87,9 +84,6 @@ void Graph<T>::AddEdge(const int& from, const int& to)
 template<typename T>
 void Graph<T>::RemoveEdge(const int& from, const int& to)
 {
-	if (from < 0 || from >= node_count || to < 0 || to >= node_count)
-		throw "RemoveEdge: index out of range";
-
 	adjacency_matrix[from * node_count + to] = 0;
 	adjacency_matrix[to * node_count + from] = 0;
 }
@@ -97,28 +91,18 @@ void Graph<T>::RemoveEdge(const int& from, const int& to)
 template<typename T>
 bool Graph<T>::ExistsEdge(const int& from, const int& to)
 {
-	if (from < 0 || from >= node_count || to < 0 || to >= node_count)
-		throw "ExistsEdge: index out of range";
-
 	return adjacency_matrix[from * node_count + to];
 }
 
 template<typename T>
 T* Graph<T>::GetNode(const int& index) {
-	if constexpr (!std::is_void_v<T>) {
-		if (index < 0 || index >= node_count) throw "GetNode: index out of range";
+	if constexpr (!std::is_void_v<T>)
 		return nodes[index];
-	}
-	throw "GetNode: type void has no nodes";
 }
 
 template<typename T>
 void Graph<T>::SetNode(const int& index, T* node) {
-	if constexpr (!std::is_void_v<T>) {
-		if (index < 0 || index >= node_count) throw "SetNode: index out of range";
+	if constexpr (!std::is_void_v<T>)
 		nodes[index] = node;
-		return;
-	}
-	throw "SetNode: type void has no nodes";
 }
 

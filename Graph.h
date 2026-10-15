@@ -47,10 +47,8 @@ Graph<T>* Graph<T>::LoadGraph(const char* filename)
 	auto graph = new Graph<T>(node_count);
 
 	int from, to;
-	while (file >> from >> to) {
+	while (file >> from >> to)
 		graph->AddEdge(from, to);
-		PRINT(from << " -> " << to);
-	}
 
 	return graph;
 }

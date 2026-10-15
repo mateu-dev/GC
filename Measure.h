@@ -3,12 +3,14 @@
 #include <functional>
 #include <chrono>
 
-int MeasureTime(std::function<void()> function) {
-	auto clock = std::chrono::high_resolution_clock();
-	auto start = clock.now();
+template<typename Unit = std::chrono::milliseconds>
+double MeasureTime(const std::function<void()>& function) {
+    using clock = std::chrono::high_resolution_clock;
 
-	function();
+    auto start = clock::now();
+    function();
+    auto end = clock::now();
 
-	std::chrono::duration time = clock.now() - start;
-	return time.count();
+    auto time = std::chrono::duration<double, typename Unit::period>(end - start);
+    return time.count();
 }

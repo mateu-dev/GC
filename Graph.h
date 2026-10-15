@@ -18,10 +18,10 @@ class Graph
 protected:
 	int node_count;
 
-	T** nodes;
+	T** nodes{ nullptr };
 	bool* adjacency_matrix;
 public:
-	static Graph<T>* LoadGraph(const char* filename);
+	static Graph<T>* LoadGraph(const char* filename, bool indexFromOne = false);
 
 	Graph(const int& node_count);
 	virtual ~Graph();
@@ -30,12 +30,12 @@ public:
 	void RemoveEdge(const int& from, const int& to);
 	bool ExistsEdge(const int& from, const int& to);
 
-	T* GetNode(const int& index) { return nodes[index]; }
-	void SetNode(const int& index, T* node) { nodes[index] = node; }
+	T* GetNode(const int& index);
+	void SetNode(const int& index, T* node);
 };
 
 template<typename T>
-Graph<T>* Graph<T>::LoadGraph(const char* filename)
+Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexFromOne)
 {
 	std::ifstream file(filename);
 	if (!file.is_open()) throw "failed to open file";
@@ -47,8 +47,11 @@ Graph<T>* Graph<T>::LoadGraph(const char* filename)
 	auto graph = new Graph<T>(node_count);
 
 	int from, to;
-	while (file >> from >> to)
-		graph->AddEdge(from, to);
+	while (file >> from >> to) {
+		if (indexFromOne)
+			graph->AddEdge(from - 1, to - 1);
+		else graph->AddEdge(from, to);
+	}
 
 	return graph;
 }
@@ -65,13 +68,18 @@ inline Graph<T>::Graph(const int& node_count) :
 template<typename T>
 Graph<T>::~Graph()
 {
-	delete[] nodes;
 	delete[] adjacency_matrix;
+
+	if constexpr (!std::is_void_v<T>)
+		delete[] nodes;
 }
 
 template<typename T>
 void Graph<T>::AddEdge(const int& from, const int& to)
 {
+	if (from < 0 || from >= node_count || to < 0 || to >= node_count)
+		throw "AddEdge: index out of range";
+
 	adjacency_matrix[from * node_count + to] = 1;
 	adjacency_matrix[to * node_count + from] = 1;
 }
@@ -79,6 +87,9 @@ void Graph<T>::AddEdge(const int& from, const int& to)
 template<typename T>
 void Graph<T>::RemoveEdge(const int& from, const int& to)
 {
+	if (from < 0 || from >= node_count || to < 0 || to >= node_count)
+		throw "RemoveEdge: index out of range";
+
 	adjacency_matrix[from * node_count + to] = 0;
 	adjacency_matrix[to * node_count + from] = 0;
 }
@@ -86,6 +97,28 @@ void Graph<T>::RemoveEdge(const int& from, const int& to)
 template<typename T>
 bool Graph<T>::ExistsEdge(const int& from, const int& to)
 {
+	if (from < 0 || from >= node_count || to < 0 || to >= node_count)
+		throw "ExistsEdge: index out of range";
+
 	return adjacency_matrix[from * node_count + to];
+}
+
+template<typename T>
+T* Graph<T>::GetNode(const int& index) {
+	if constexpr (!std::is_void_v<T>) {
+		if (index < 0 || index >= node_count) throw "GetNode: index out of range";
+		return nodes[index];
+	}
+	throw "GetNode: type void has no nodes";
+}
+
+template<typename T>
+void Graph<T>::SetNode(const int& index, T* node) {
+	if constexpr (!std::is_void_v<T>) {
+		if (index < 0 || index >= node_count) throw "SetNode: index out of range";
+		nodes[index] = node;
+		return;
+	}
+	throw "SetNode: type void has no nodes";
 }
 

@@ -12,9 +12,9 @@ int GC(const Graph* graph) {
 }
 
 int main(int argc, char* argv[]) {
-	const char* filename = "./test_input.txt"; // argv[1];
+	const char* filename = "./the_input.txt"; // argv[1];
 
-	auto graph = Graph::LoadGraph(filename);
+	auto graph = Graph::LoadGraph(filename, true);
 	int result{};
 	std::cout << "Time: " << MeasureTime([&] {
 		// Run algorithm here

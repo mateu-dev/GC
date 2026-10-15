@@ -27,6 +27,8 @@ public:
 	Graph(const int& node_count);
 	virtual ~Graph();
 
+	int GetNodeCount() {return node_count}
+
 	void AddEdge(const int& from, const int& to);
 	void RemoveEdge(const int& from, const int& to);
 	bool ExistsEdge(const int& from, const int& to);

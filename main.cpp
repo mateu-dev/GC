@@ -2,13 +2,24 @@
 #include "Measure.h"
 #include <iostream>
 
+struct Node {
+	int color{ 0 };
+	Node() = default;
+};
+
 // Change graph type here
-#define Graph Graph<void>
+#define Graph Graph<Node>
 
 int GC(const Graph* graph) {
 	// Algorithm Here
 
-	return 0;
+	// Example: Set Node's value
+	// graph->GetNode(4)->color = 2;
+
+	// Example: Print Node Color
+	// std::cout << graph->GetNode(4)->color << "\n";
+	
+	return -1;
 }
 
 int main(int argc, char* argv[]) {
@@ -21,6 +32,7 @@ int main(int argc, char* argv[]) {
 		result = GC(graph);
 		}) << "ms\n";
 	std::cout << "Result: " << result << std::endl;
+
 
 	return 0;
 }

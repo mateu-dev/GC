@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <type_traits>
+#include <vector>
 
 #define DEBUG
 
@@ -18,7 +19,7 @@ class Graph
 protected:
 	int node_count;
 
-	T** nodes{ nullptr };
+	T* nodes{ nullptr }; // Graph owns node instances
 	bool* adjacency_matrix;
 public:
 	static Graph<T>* LoadGraph(const char* filename, bool indexFromOne = false);
@@ -30,8 +31,11 @@ public:
 	void RemoveEdge(const int& from, const int& to);
 	bool ExistsEdge(const int& from, const int& to);
 
+	std::vector<int> GetNeighborIndexes(const int& index);
+
 	T* GetNode(const int& index);
-	void SetNode(const int& index, T* node);
+	void SetNode(const int& index, const T& node);
+	std::vector<T*> GetNeighborNodes(const int& index);
 };
 
 template<typename T>
@@ -62,7 +66,7 @@ inline Graph<T>::Graph(const int& node_count) :
 	adjacency_matrix(new bool[node_count * node_count] {})
 {
 	if constexpr (!std::is_void_v<T>)
-		nodes = new T * [node_count];
+		nodes = new T[node_count] {};
 }
 
 template<typename T>
@@ -95,14 +99,37 @@ bool Graph<T>::ExistsEdge(const int& from, const int& to)
 }
 
 template<typename T>
-T* Graph<T>::GetNode(const int& index) {
-	if constexpr (!std::is_void_v<T>)
-		return nodes[index];
+std::vector<int> Graph<T>::GetNeighborIndexes(const int& index)
+{
+	std::vector<int> neighbors;
+	neighbors.reserve(node_count);
+	for (int i = 0;i < node_count;i++)
+		if (ExistsEdge(index, i))
+			neighbors.push_back(i);
+	return neighbors;
 }
 
 template<typename T>
-void Graph<T>::SetNode(const int& index, T* node) {
+T* Graph<T>::GetNode(const int& index) {
+	if constexpr (!std::is_void_v<T>)
+		return &nodes[index];
+}
+
+template<typename T>
+void Graph<T>::SetNode(const int& index, const T& node) {
 	if constexpr (!std::is_void_v<T>)
 		nodes[index] = node;
+}
+
+template<typename T>
+std::vector<T*> Graph<T>::GetNeighborNodes(const int& index)
+{
+	std::vector<T*> neighbors;
+	neighbors.reserve(node_count);
+	for (int i = 0;i < node_count;i++)
+		if (ExistsEdge(index, i))
+			neighbors.push_back(GetNode(i));
+	return neighbors;
+
 }
 

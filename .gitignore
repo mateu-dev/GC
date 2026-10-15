@@ -1,69 +1,46 @@
-# Prerequisites
-*.d
+## Ignore Visual Studio temporary files, build outputs and user-specific files
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# Visual Studio folder
+.vs/
+
+# User-specific files
+*.suo
+*.user
+*.vcxproj.user
+*.userosscache
+
+# Visual C++ database
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Build folders
+Debug/
+Release/
+x64/
+build/
+
+# Compiled object files, libraries, executables, and debug files
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
+*.o
+*.lib
+*.dll
+*.exe
+*.pdb
 *.ilk
 
-# Debugger Files
-*.pdb
+# VS intermediate files
+*.ipch
+*.iobj
+*.idb
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.so.*
-
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Build directories
-build/
-Build/
-build-*/
-
-# CMake generated files
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-install_manifest.txt
-compile_commands.json
-
-# Temporary files
-*.tmp
+# Logs and archives
 *.log
-*.bak
-*.swp
+*.zip
+*.7z
 
-# vcpkg
-vcpkg_installed/
+# Ignore other editor/OS files
+*.DS_Store
+Thumbs.db
 
-# debug information files
-*.dwo
-
-# test output & cache
-Testing/
-.cache/
+# Keep source files and project files tracked (no negations needed)

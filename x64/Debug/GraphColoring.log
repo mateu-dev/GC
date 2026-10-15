@@ -1,0 +1,15 @@
+﻿  Scanning sources for module dependencies...
+  main.cpp
+C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Graph.h(11,9): warning C4005: 'PRINT': macro redefinition
+  (compiling source file 'main.cpp')
+      C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Graph.h(9,9):
+      see previous definition of 'PRINT'
+  
+C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Measure.h(13,19): warning C4244: 'return': conversion from '_Rep' to 'int', possible loss of data
+C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Measure.h(13,19): warning C4244:         with
+C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Measure.h(13,19): warning C4244:         [
+C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Measure.h(13,19): warning C4244:             _Rep=__int64
+C:\Users\mateu\Desktop\Projects\GraphColoring\GraphColoring\Measure.h(13,19): warning C4244:         ]
+  (compiling source file 'main.cpp')
+  
+  GraphColoring.vcxproj -> C:\Users\mateu\Desktop\Projects\GraphColoring\x64\Debug\GraphColoring.exe

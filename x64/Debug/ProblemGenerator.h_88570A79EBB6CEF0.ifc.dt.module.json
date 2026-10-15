@@ -1,0 +1,22 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "x64\\Debug\\ProblemGenerator.obj",
+            "outputs": [
+                "x64\\Debug\\ProblemGenerator.h_88570A79EBB6CEF0.ifc.dt.module.json",
+                "x64\\Debug\\ProblemGenerator.h_88570A79EBB6CEF0.ifc.dt.d.json",
+                "x64\\Debug\\ProblemGenerator.h.ifc"
+            ],
+            "provides": [
+                {
+                    "logical-name": "C:\\Users\\mateu\\Desktop\\Projects\\GraphColoring\\GraphColoring\\ProblemGenerator.h",
+                    "source-path": "c:\\users\\mateu\\desktop\\projects\\graphcoloring\\graphcoloring\\problemgenerator.h",
+                    "lookup-method": "absolute"
+                }
+            ],
+            "requires": []
+        }
+    ]
+}

@@ -1,0 +1,5 @@
+﻿  Graph.cpp
+  main.cpp
+  Generating Code...
+main.obj : error LNK2019: unresolved external symbol "public: static class Graph<void> * __cdecl Graph<void>::LoadGraph(char const *)" (?LoadGraph@?$Graph@X@@SAPAV1@PBD@Z) referenced in function _main
+C:\Users\mateu\Desktop\Projects\GraphColoring\Debug\GraphColoring.exe : fatal error LNK1120: 1 unresolved externals

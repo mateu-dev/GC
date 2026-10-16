@@ -1,0 +1,3 @@
+generator:
+    zakłada, że graf jest skierowany a w rzeczywistości ma być nieskierowany (input jaki dostaliśmy na to wskazuje)
+    obecnie wierzchołki zaczynają się od 0. Mają się zaczynać od 1

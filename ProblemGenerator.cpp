@@ -4,28 +4,29 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <filesystem>
 
 #define RANDINT(MAX) (int)(rand()%(MAX))
 
 void GenerateProblem(const char* filename, int node_count, double conn_density, int seed) {
-	srand(seed);
+    srand(seed);
 
-	std::ofstream stream(filename, std::ios_base::trunc);
-	stream << node_count << "\n";
+    std::ofstream stream(filename, std::ios_base::trunc);
+    stream << node_count << "\n";
 
-	int c = node_count * node_count * conn_density;
-	int index_max = node_count - 1;
-	while (c-- > 0) {
-		int from = RANDINT(index_max);
-		int to = RANDINT(index_max);
-		if (from == to) continue;
+		
+    // Generates 1-based undirected edges
+    for (int from = 1; from <= node_count; from++) {
+        for (int to = from + 1; to <= node_count; to++) {
+            if ((double)rand() / RAND_MAX < conn_density) {
+                stream << from << " " << to << "\n";
+            }
+        }
+    }
 
-		stream << from << " " << to << "\n";
-	}
-
-	stream.close();
+    stream.close();
 }
 
 void GenerateProblem(const char* filename, int node_count, double conn_density) {
-	GenerateProblem(filename, node_count, conn_density, time(NULL));
+    GenerateProblem(filename, node_count, conn_density, time(NULL));
 }

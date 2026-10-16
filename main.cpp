@@ -1,6 +1,6 @@
 #include "Graph.h"
 #include "Measure.h"
-#include "ProblemGenerator.cpp"
+#include "ProblemGenerator.h"
 #include <iostream>
 #include <filesystem>
 
@@ -45,8 +45,8 @@ int GC(Graph* graph) {
 }
 
 int main(int argc, char* argv[]) {
-    const char* filename = "test_input.txt"; // argv[1];
-    GenerateProblem(filename, 10, 0.15, 1);
+    const char* filename = "graph_100.txt"; // argv[1];
+    //GenerateProblem(filename, 10, 0.15, 1);
 
     auto graph = Graph::LoadGraph(filename);
     int result{};
@@ -55,12 +55,12 @@ int main(int argc, char* argv[]) {
         result = GC(graph);
         }) << "ms\n";
     std::cout << "Result: " << result << std::endl;
-    for (int i = 1; i <= graph->GetNodeCount(); i++) {
-        std::cout << "Node " << i << ": Color " << graph->GetNode(i)->color << "\n";
-        for (int neighbor : graph->GetNeighborIndexes(i)) {
-            std::cout << "  Neighbor " << neighbor << ": Color " << graph->GetNode(neighbor)->color << "\n";
-        }
-    }
+    //for (int i = 1; i <= graph->GetNodeCount(); i++) {
+    //    std::cout << "Node " << i << ": Color " << graph->GetNode(i)->color << "\n";
+    //    for (int neighbor : graph->GetNeighborIndexes(i)) {
+    //        std::cout << "  Neighbor " << neighbor << ": Color " << graph->GetNode(neighbor)->color << "\n";
+    //    }
+    //}
 
     delete graph;
 

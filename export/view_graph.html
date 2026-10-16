@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Graph Viewer</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #101419;
+            --panel: #171d24;
+            --line: #2b3540;
+            --text: #e7edf3;
+            --muted: #91a0af;
+            --accent: #56d7e8;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font: 14px/1.4 system-ui, Segoe UI, sans-serif
+        }
+
+        button,
+        input {
+            font: inherit;
+            color: inherit;
+            background: #202832;
+            border: 1px solid #36424e;
+            border-radius: 7px;
+            padding: 7px 10px
+        }
+
+        button {
+            cursor: pointer
+        }
+
+        button:hover {
+            border-color: var(--accent)
+        }
+
+        #app {
+            height: 100%;
+            display: grid;
+            grid-template-rows: auto 1fr
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            flex-wrap: wrap
+        }
+
+        header strong {
+            font-size: 15px;
+            margin-right: 8px
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        #status {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        main {
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 270px
+        }
+
+        #stage {
+            position: relative;
+            min-width: 0;
+            min-height: 0
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+            touch-action: none
+        }
+
+        canvas.dragging {
+            cursor: grabbing
+        }
+
+        aside {
+            background: var(--panel);
+            border-left: 1px solid var(--line);
+            padding: 16px;
+            overflow: auto
+        }
+
+        aside h2 {
+            font-size: 14px;
+            margin: 0 0 12px
+        }
+
+        .section {
+            padding: 12px 0;
+            border-top: 1px solid var(--line)
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 5px
+        }
+
+        #details {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace
+        }
+
+        #empty {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            pointer-events: none;
+            color: var(--muted);
+            text-align: center;
+            padding: 30px
+        }
+
+        #empty div {
+            max-width: 440px;
+            background: #171d24dd;
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: 12px
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        .stat {
+            display: inline-block;
+            padding: 3px 7px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            margin: 2px 4px 2px 0;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        input[type=file] {
+            max-width: 230px;
+            padding: 5px
+        }
+
+        @media(max-width:700px) {
+            main {
+                grid-template-columns: minmax(0, 1fr) 210px
+            }
+
+            header .hint {
+                display: none
+            }
+        }
+
+        @media(max-width:520px) {
+            main {
+                grid-template-columns: 1fr;
+                grid-template-rows: minmax(0, 1fr) 180px
+            }
+
+            aside {
+                border-left: 0;
+                border-top: 1px solid var(--line)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header>
+            <strong>Graph Viewer</strong>
+            <button id="reload">Reload graph.js</button>
+            <button id="fit">Fit view</button>
+            <button id="reset">Reset layout</button>
+            <button id="sample">Load sample</button>
+            <span id="status">No graph loaded</span>
+        </header>
+        <main>
+            <section id="stage">
+                <canvas id="canvas"></canvas>
+                <div id="empty">
+                    <div><strong>Load a graph JSON file</strong>
+                        <p>Choose the file written by <code>Graph&lt;T&gt;::Export()</code>, or load the sample to try
+                            the controls.</p>
+                        <p>Drag the background to pan, scroll to zoom, and drag nodes to move them.</p>
+                    </div>
+                </div>
+            </section>
+            <aside>
+                <h2>Graph details</h2>
+                <div id="stats"><span class="stat">0 nodes</span><span class="stat">0 edges</span></div>
+                <div class="section">
+                    <div class="label">Selection</div>
+                    <div id="selected">No node selected</div>
+                </div>
+                <div class="section">
+                    <div class="label">Node data</div>
+                    <div id="details">Select a node to inspect its serialized properties.</div>
+                </div>
+                <div class="section">
+                    <div class="label">Controls</div>
+                    <div class="hint">Click a node to select it.<br>Drag a node to move it.<br>Drag empty space to
+                        pan.<br>Mouse wheel to zoom.<br>Double-click empty space to fit.</div>
+                </div>
+            </aside>
+        </main>
+    </div>
+    <script>
+        (() => {
+            const script = document.createElement("script");
+            script.src = "./export.js";
+            script.onload = () => load(window.GRAPH_DATA);
+            document.head.appendChild(script);
+
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const stage = document.getElementById('stage');
+            const empty = document.getElementById('empty');
+            const status = document.getElementById('status');
+            const stats = document.getElementById('stats');
+            const selectedLabel = document.getElementById('selected');
+            const details = document.getElementById('details');
+            const dataUrl = new URLSearchParams(location.search).get('data') || 'graph.js';
+
+            let graph = null, nodes = [], edges = [], selected = null;
+            let view = {x: 0, y: 0, scale: 1};
+            let pointer = null, dragNode = null, moved = false;
+            const R = 17;
+
+            function parseExport(text) {
+                text = text.trim();
+                // Accept either plain JSON or: const DATA = JSON.parse(`...`);
+                const match = text.match(/JSON\.parse\(\s*`([\s\S]*)`\s*\)\s*;?\s*$/);
+                if (match) text = match[1].replace(/\\`/g, '`').replace(/\\\\/g, '\\');
+                return JSON.parse(text);
+            }
+            function normalize(data) {
+                if (!data || typeof data !== 'object' || !Number.isInteger(Number(data.node_count)) || Number(data.node_count) < 0)
+                    throw new Error('Expected an object with a non-negative node_count property.');
+                const count = Number(data.node_count);
+                const nodeData = data.nodes || {};
+                const adjacency = data.edges || {};
+                const out = [];
+                for (let i = 0; i < count; i++) {
+                    const key = String(i);
+                    out.push({id: i, data: Object.prototype.hasOwnProperty.call(nodeData, key) ? nodeData[key] : null, x: 0, y: 0});
+                }
+                const edgeList = [];
+                const seen = new Set();
+                for (let i = 0; i < count; i++) {
+                    const list = adjacency[String(i)] || [];
+                    if (!Array.isArray(list)) continue;
+                    for (const raw of list) {
+                        const j = Number(raw);
+                        if (!Number.isInteger(j) || j < 0 || j >= count || i === j) continue;
+                        // Adjacency matrices commonly represent undirected edges twice.
+                        const a = Math.min(i, j), b = Math.max(i, j), key = `${a}:${b}`;
+                        if (seen.has(key)) continue;
+                        seen.add(key); edgeList.push({a, b});
+                    }
+                }
+                return {node_count: count, nodes: nodeData, edges: adjacency, _nodes: out, _edges: edgeList};
+            }
+            function layoutCircle() {
+                const n = nodes.length;
+                const radius = Math.max(90, n * 12);
+                nodes.forEach((node, i) => {
+                    const angle = -Math.PI / 2 + i * Math.PI * 2 / Math.max(1, n);
+                    node.x = n === 1 ? 0 : Math.cos(angle) * radius;
+                    node.y = n === 1 ? 0 : Math.sin(angle) * radius;
+                });
+                fitView();
+            }
+            function load(data) {
+                graph = normalize(data);
+                nodes = graph._nodes; edges = graph._edges; selected = null;
+                layoutCircle();
+                empty.classList.add('hidden');
+                status.textContent = `${nodes.length} nodes · ${edges.length} connections`;
+                stats.innerHTML = `<span class="stat">${nodes.length} nodes</span><span class="stat">${edges.length} connections</span>`;
+                updateDetails(); draw();
+            }
+            function fitView() {
+                if (!nodes.length) {view = {x: stage.clientWidth / 2, y: stage.clientHeight / 2, scale: 1}; draw(); return;}
+                const w = stage.clientWidth, h = stage.clientHeight;
+                const minX = Math.min(...nodes.map(n => n.x)) - R * 2, maxX = Math.max(...nodes.map(n => n.x)) + R * 2;
+                const minY = Math.min(...nodes.map(n => n.y)) - R * 2, maxY = Math.max(...nodes.map(n => n.y)) + R * 2;
+                const sx = w / Math.max(1, maxX - minX), sy = h / Math.max(1, maxY - minY);
+                view.scale = Math.max(.08, Math.min(2, Math.min(sx, sy)));
+                view.x = w / 2 - (minX + maxX) / 2 * view.scale;
+                view.y = h / 2 - (minY + maxY) / 2 * view.scale;
+                draw();
+            }
+            function resize() {
+                const dpr = window.devicePixelRatio || 1, rect = stage.getBoundingClientRect();
+                canvas.width = Math.max(1, Math.round(rect.width * dpr));
+                canvas.height = Math.max(1, Math.round(rect.height * dpr));
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                draw();
+            }
+            function world(p) {return {x: (p.x - view.x) / view.scale, y: (p.y - view.y) / view.scale};}
+            function screen(p) {return {x: p.x * view.scale + view.x, y: p.y * view.scale + view.y};}
+            function pos(e) {const r = canvas.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top};}
+            function nodeAt(p) {
+                const q = world(p);
+                for (let i = nodes.length - 1; i >= 0; i--) {
+                    const n = nodes[i];
+                    if (Math.hypot(n.x - q.x, n.y - q.y) <= R + 4 / view.scale) return n;
+                }
+                return null;
+            }
+            function colorFor(node) {
+                // `color` is a category/index, not an RGB value. The golden-angle hue
+                // spacing gives adjacent indices noticeably different, repeatable colors.
+                const raw = node.data && typeof node.data === 'object' ? node.data.color : 0;
+                const index = Number.isFinite(Number(raw)) ? Math.trunc(Number(raw)) : 0;
+                const hue = ((index * 137.508) % 360 + 360) % 360;
+                const saturation = 66 + (Math.abs(index * 17) % 16);
+                const lightness = 43 + (Math.abs(index * 29) % 12);
+                return `hsl(${hue.toFixed(1)} ${saturation}% ${lightness}%)`;
+            }
+            function draw() {
+                if (!ctx) return;
+                const w = stage.clientWidth, h = stage.clientHeight;
+                ctx.clearRect(0, 0, w, h);
+                ctx.fillStyle = '#101419'; ctx.fillRect(0, 0, w, h);
+                // Subtle background grid
+                const step = 40 * view.scale;
+                if (step > 8) {
+                    ctx.beginPath(); ctx.strokeStyle = '#1b232b'; ctx.lineWidth = 1;
+                    const ox = ((view.x % step) + step) % step, oy = ((view.y % step) + step) % step;
+                    for (let x = ox; x < w; x += step) {ctx.moveTo(x, 0); ctx.lineTo(x, h)}
+                    for (let y = oy; y < h; y += step) {ctx.moveTo(0, y); ctx.lineTo(w, y)}
+                    ctx.stroke();
+                }
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#657785';
+                ctx.beginPath();
+                for (const e of edges) {
+                    const a = nodes[e.a], b = nodes[e.b]; if (!a || !b) continue;
+                    const p = screen(a), q = screen(b);
+                    const dx = q.x - p.x, dy = q.y - p.y, len = Math.hypot(dx, dy) || 1;
+                    const ux = dx / len, uy = dy / len;
+                    ctx.moveTo(p.x + ux * R * view.scale, p.y + uy * R * view.scale);
+                    ctx.lineTo(q.x - ux * R * view.scale, q.y - uy * R * view.scale);
+                }
+                ctx.stroke();
+                for (const n of nodes) {
+                    const p = screen(n), r = R * view.scale;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = colorFor(n); ctx.fill();
+                    ctx.lineWidth = selected === n.id ? 3 : 1.5;
+                    ctx.strokeStyle = selected === n.id ? '#56d7e8' : '#9aafbd'; ctx.stroke();
+                    if (view.scale > .42) {
+                        ctx.fillStyle = '#f1f6fa'; ctx.font = `${Math.max(10, 12 * view.scale)}px system-ui`;
+                        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(n.id), p.x, p.y);
+                    }
+                }
+            }
+            function updateDetails() {
+                if (selected === null) {
+                    selectedLabel.textContent = 'No node selected';
+                    details.textContent = 'Select a node to inspect its serialized properties.';
+                    return;
+                }
+                const n = nodes[selected];
+                const neighbors = (graph.edges[String(selected)] || []);
+                selectedLabel.textContent = `Node ${selected}`;
+                details.textContent = JSON.stringify({id: n.id, neighbors, data: n.data}, null, 2);
+            }
+            canvas.addEventListener('pointerdown', e => {
+                if (!graph) return;
+                canvas.setPointerCapture(e.pointerId);
+                const p = pos(e), hit = nodeAt(p);
+                pointer = {x: p.x, y: p.y, lastX: p.x, lastY: p.y};
+                moved = false;
+                if (hit) {dragNode = hit; selected = hit.id; updateDetails()}
+                else dragNode = null;
+                canvas.classList.add('dragging'); draw();
+            });
+            canvas.addEventListener('pointermove', e => {
+                if (!pointer) return;
+                const p = pos(e), dx = p.x - pointer.lastX, dy = p.y - pointer.lastY;
+                if (Math.abs(p.x - pointer.x) + Math.abs(p.y - pointer.y) > 3) moved = true;
+                if (dragNode) {
+                    dragNode.x += dx / view.scale; dragNode.y += dy / view.scale;
+                } else {view.x += dx; view.y += dy;}
+                pointer.lastX = p.x; pointer.lastY = p.y; draw();
+            });
+            function endPointer(e) {
+                if (!pointer) return;
+                const p = pos(e);
+                if (!moved) {
+                    const hit = nodeAt(p);
+                    selected = hit ? hit.id : null; updateDetails();
+                }
+                pointer = null; dragNode = null; canvas.classList.remove('dragging'); draw();
+            }
+            canvas.addEventListener('pointerup', endPointer);
+            canvas.addEventListener('pointercancel', () => {pointer = null; dragNode = null; canvas.classList.remove('dragging')});
+            canvas.addEventListener('wheel', e => {
+                e.preventDefault();
+                const p = pos(e), before = world(p);
+                view.scale = Math.max(.08, Math.min(4, view.scale * Math.exp(-e.deltaY * .001)));
+                view.x = p.x - before.x * view.scale; view.y = p.y - before.y * view.scale; draw();
+            }, {passive: false});
+            canvas.addEventListener('dblclick', e => {if (!nodeAt(pos(e))) fitView()});
+            document.getElementById('fit').addEventListener('click', fitView);
+            document.getElementById('reset').addEventListener('click', layoutCircle);
+            document.getElementById('sample').addEventListener('click', () => load({
+                node_count: 7,
+                nodes: {"0": {"color": "#3679a8"}, "1": {"color": "#328f82"}, "2": {"color": "#a86e42"}, "3": {"color": "#7756a8"}, "4": {"color": "#3e8d59"}, "5": {"color": "#b04f68"}, "6": {"color": "#6c8491"}},
+                edges: {"0": [1, 2, 3], "1": [0, 2, 4], "2": [0, 1, 3, 5], "3": [0, 2, 5], "4": [1, 5, 6], "5": [2, 3, 4, 6], "6": [4, 5]}
+            }));
+            async function loadFromNeighbor() {
+                status.textContent = `Loading ${dataUrl}…`;
+                try {
+                    const response = await fetch(dataUrl, {cache: 'no-store'});
+                    if (!response.ok) throw new Error(`HTTP ${response.status} — file not found`);
+                    const source = await response.text();
+                    load(parseExport(source));
+                    status.textContent = `${dataUrl} · ${nodes.length} nodes · ${edges.length} connections`;
+                } catch (err) {
+                    status.textContent = `Could not load ${dataUrl}`;
+                    empty.classList.remove('hidden');
+                    empty.querySelector('strong').textContent = 'Could not load graph.js';
+                    empty.querySelector('p').innerHTML =
+                        `Expected <code>${dataUrl.replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]))}</code> beside this HTML file. ` +
+                        `Serve this directory over HTTP (not by opening the HTML directly with file://), then reload.\n\n${err.message}`;
+                }
+            }
+            document.getElementById('reload').addEventListener('click', loadFromNeighbor);
+            window.addEventListener('resize', resize);
+            resize();
+            loadFromNeighbor();
+        })();
+    </script>
+</body>
+
+</html>

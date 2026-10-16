@@ -20,7 +20,7 @@ void GenerateProblem(const char* filename, int node_count, double conn_density, 
 		int to = RANDINT(index_max);
 		if (from == to) continue;
 
-		stream << from << " " << to << "\n";
+		stream << from+1 << " " << to+1 << "\n";
 	}
 
 	stream.close();

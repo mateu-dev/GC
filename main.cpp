@@ -11,7 +11,7 @@ struct Node {
 // Change graph type here
 #define Graph Graph<Node>
 
-static int GC(Graph* graph) {
+int GC(Graph* graph) {
 	const int node_count = graph->GetNodeCount();
 
 	// We know the answers right away for size 1 and 2
@@ -52,7 +52,7 @@ static int GC(Graph* graph) {
 }
 
 int main(int argc, char* argv[]) {
-	const char* filename = "./the_input.txt"; // argv[1];
+	const char* filename = "./test_case2.txt"; // argv[1];
 
 	auto graph = Graph::LoadGraph(filename, true);
 	int result{};

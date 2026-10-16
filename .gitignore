@@ -44,3 +44,4 @@ build/
 Thumbs.db
 
 # Keep source files and project files tracked (no negations needed)
+export/*.js

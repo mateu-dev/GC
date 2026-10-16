@@ -21,6 +21,12 @@
     <ClInclude Include="Measure.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="options.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -35,5 +41,11 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="test_input.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="export\view_graph.html">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

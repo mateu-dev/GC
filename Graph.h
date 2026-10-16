@@ -1,19 +1,23 @@
 #pragma once
 
+#include "options.h"
+
 #include <fstream>
-#include <iostream>
+#include <string>
 #include <type_traits>
 #include <vector>
 
-#define DEBUG
-
-#define PRINT(A)
 #ifdef DEBUG
-#define PRINT(A) std::cout<<A<<"\n";
+#include "json.hpp"
 #endif // DEBUG
 
+#define TEMPLATE template<typename T> requires (std::is_void_v<T> || std::is_base_of_v<_Base, T>)
 
-template<typename T = void>
+struct _Base {
+	virtual nlohmann::json Serialize() = 0;
+};
+
+TEMPLATE
 class Graph
 {
 protected:
@@ -22,7 +26,7 @@ protected:
 	T* nodes{ nullptr }; // Graph owns node instances
 	bool* adjacency_matrix;
 public:
-	static Graph<T>* LoadGraph(const char* filename, bool indexFromOne = false);
+	static Graph<T>* LoadGraph(const char* filename, const bool indexed_from_one = false);
 
 	Graph(const int& node_count);
 	virtual ~Graph();
@@ -38,10 +42,13 @@ public:
 	T* GetNode(const int& index);
 	void SetNode(const int& index, const T& node);
 	std::vector<T*> GetNeighborNodes(const int& index);
+
+	void Export(const char* filename, const bool export_as_js = false);
+	void ExportAndView();
 };
 
-template<typename T>
-Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexedFromOne)
+TEMPLATE
+Graph<T>* Graph<T>::LoadGraph(const char* filename, const bool indexed_from_one)
 {
 	std::ifstream file(filename);
 	if (!file.is_open()) throw "failed to open file";
@@ -54,7 +61,7 @@ Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexedFromOne)
 
 	int from, to;
 	while (file >> from >> to) {
-		if (indexedFromOne)
+		if (indexed_from_one)
 			graph->AddEdge(from - 1, to - 1);
 		else graph->AddEdge(from, to);
 	}
@@ -62,16 +69,16 @@ Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexedFromOne)
 	return graph;
 }
 
-template<typename T>
+TEMPLATE
 inline Graph<T>::Graph(const int& node_count) :
 	node_count(node_count),
-	adjacency_matrix(new bool[node_count * node_count] {})
+	adjacency_matrix(new bool[node_count * node_count] {false})
 {
 	if constexpr (!std::is_void_v<T>)
 		nodes = new T[node_count]{};
 }
 
-template<typename T>
+TEMPLATE
 Graph<T>::~Graph()
 {
 	delete[] adjacency_matrix;
@@ -80,27 +87,27 @@ Graph<T>::~Graph()
 		delete[] nodes;
 }
 
-template<typename T>
+TEMPLATE
 void Graph<T>::AddEdge(const int& from, const int& to)
 {
 	adjacency_matrix[from * node_count + to] = 1;
 	adjacency_matrix[to * node_count + from] = 1;
 }
 
-template<typename T>
+TEMPLATE
 void Graph<T>::RemoveEdge(const int& from, const int& to)
 {
 	adjacency_matrix[from * node_count + to] = 0;
 	adjacency_matrix[to * node_count + from] = 0;
 }
 
-template<typename T>
+TEMPLATE
 bool Graph<T>::ExistsEdge(const int& from, const int& to)
 {
 	return adjacency_matrix[from * node_count + to];
 }
 
-template<typename T>
+TEMPLATE
 std::vector<int> Graph<T>::GetNeighborIndexes(const int& index)
 {
 	std::vector<int> neighbors;
@@ -111,19 +118,19 @@ std::vector<int> Graph<T>::GetNeighborIndexes(const int& index)
 	return neighbors;
 }
 
-template<typename T>
+TEMPLATE
 T* Graph<T>::GetNode(const int& index) {
 	if constexpr (!std::is_void_v<T>)
 		return &nodes[index];
 }
 
-template<typename T>
+TEMPLATE
 void Graph<T>::SetNode(const int& index, const T& node) {
 	if constexpr (!std::is_void_v<T>)
 		nodes[index] = node;
 }
 
-template<typename T>
+TEMPLATE
 std::vector<T*> Graph<T>::GetNeighborNodes(const int& index)
 {
 	std::vector<T*> neighbors;
@@ -133,5 +140,53 @@ std::vector<T*> Graph<T>::GetNeighborNodes(const int& index)
 			neighbors.push_back(GetNode(i));
 	return neighbors;
 
+}
+
+TEMPLATE
+void Graph<T>::Export(const char* filename, const bool export_as_js)
+{
+	nlohmann::json data;
+
+	data["node_count"] = node_count;
+
+	if constexpr (!std::is_void_v<T>) {
+		data["nodes"] = nlohmann::json::object();
+		for (int i = 0; i < node_count; ++i) {
+			T* node = GetNode(i);
+			if (node)
+				data["nodes"][std::to_string(i)] = node->Serialize();
+			else
+				data["nodes"][std::to_string(i)] = nullptr;
+		}
+	}
+
+	data["edges"] = nlohmann::json::object();
+	for (int i = 0; i < node_count; ++i) {
+		auto neighbors = GetNeighborIndexes(i);
+		nlohmann::json jneighbors = nlohmann::json::array();
+		for (int n : neighbors)
+			jneighbors.push_back(n);
+
+		data["edges"][std::to_string(i)] = jneighbors;
+	}
+
+
+	std::ofstream ofs(filename);
+	if (ofs.is_open()) {
+		if (export_as_js)
+			ofs << "window.GRAPH_DATA = ";
+		ofs << data.dump();
+		if (export_as_js)
+			ofs << ";";
+		ofs.close();
+	}
+}
+
+TEMPLATE
+inline void Graph<T>::ExportAndView()
+{
+	const char* filename = "./export/export.js";
+	Export(filename, true);
+	system("start ./export/view_graph.html");
 }
 

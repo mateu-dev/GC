@@ -1,11 +1,19 @@
 #include "Graph.h"
 #include "Measure.h"
+#include "json.hpp"
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 
-struct Node {
+struct Node :public _Base {
 	int color{ 0 };
 	Node() = default;
+
+	nlohmann::json Serialize() override {
+		nlohmann::json json;
+		json["color"] = color;
+		return json;
+	}
 };
 
 // Change graph type here
@@ -52,7 +60,7 @@ int GC(Graph* graph) {
 }
 
 int main(int argc, char* argv[]) {
-	const char* filename = "./test_case2.txt"; // argv[1];
+	const char* filename = "./problems/graph_20.txt"; // argv[1];
 
 	auto graph = Graph::LoadGraph(filename, true);
 	int result{};
@@ -62,6 +70,8 @@ int main(int argc, char* argv[]) {
 		}) << "ms\n";
 	std::cout << "Result: " << result << std::endl;
 
+	// Show graph in browser
+	graph->ExportAndView();
 
 	return 0;
 }

@@ -140,7 +140,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Graph.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="Measure.h" />
+    <ClInclude Include="options.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -149,6 +151,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="test_input.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+    <None Include="export\view_graph.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

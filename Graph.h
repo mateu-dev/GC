@@ -27,7 +27,7 @@ public:
 	Graph(const int& node_count);
 	virtual ~Graph();
 
-	int GetNodeCount() {return node_count}
+	int GetNodeCount() const { return node_count; }
 
 	void AddEdge(const int& from, const int& to);
 	void RemoveEdge(const int& from, const int& to);
@@ -41,7 +41,7 @@ public:
 };
 
 template<typename T>
-Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexFromOne)
+Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexedFromOne)
 {
 	std::ifstream file(filename);
 	if (!file.is_open()) throw "failed to open file";
@@ -54,7 +54,7 @@ Graph<T>* Graph<T>::LoadGraph(const char* filename, bool indexFromOne)
 
 	int from, to;
 	while (file >> from >> to) {
-		if (indexFromOne)
+		if (indexedFromOne)
 			graph->AddEdge(from - 1, to - 1);
 		else graph->AddEdge(from, to);
 	}
@@ -68,7 +68,7 @@ inline Graph<T>::Graph(const int& node_count) :
 	adjacency_matrix(new bool[node_count * node_count] {})
 {
 	if constexpr (!std::is_void_v<T>)
-		nodes = new T[node_count] {};
+		nodes = new T[node_count]{};
 }
 
 template<typename T>

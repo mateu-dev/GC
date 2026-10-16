@@ -1,6 +1,7 @@
 #include "Graph.h"
 #include "Measure.h"
 #include <iostream>
+#include <vector>
 
 struct Node {
 	int color{ 0 };
@@ -10,16 +11,44 @@ struct Node {
 // Change graph type here
 #define Graph Graph<Node>
 
-int GC(const Graph* graph) {
-	// Algorithm Here
+static int GC(Graph* graph) {
+	const int node_count = graph->GetNodeCount();
 
-	// Example: Set Node's value
-	// graph->GetNode(4)->color = 2;
+	// We know the answers right away for size 1 and 2
+	if (node_count <= 2) {
+		if (node_count == 1) return 1;
+		else if (graph->ExistsEdge(0, 1)) return 2;
+	}
 
-	// Example: Print Node Color
-	// std::cout << graph->GetNode(4)->color << "\n";
-	
-	return -1;
+	graph->GetNode(0)->color = 0; // We dont have to check the neighbors of the first node.
+
+	int color_count = 1;
+	for (int i = 1;i < node_count;i++) {
+		std::vector<bool> used_colors{ false };
+		used_colors.resize(node_count);
+
+		// Find used colors
+		auto neighbors = graph->GetNeighborNodes(i);
+		for (Node* neighbor : neighbors) {
+			int neighbor_color = neighbor->color;
+			if (neighbor_color >= 0)
+				used_colors[neighbor_color] = true;
+		}
+
+		for (int j = 0;j < node_count;j++) {
+			if (!used_colors[j]) {
+				graph->GetNode(i)->color = j;
+
+				// color count is 1 more than index
+				int estimated_color_count = j + 1;
+				// max(color_count,estimated_color_count)
+				color_count = color_count < estimated_color_count ? estimated_color_count : color_count;
+				break;
+			}
+		}
+	}
+
+	return color_count;
 }
 
 int main(int argc, char* argv[]) {

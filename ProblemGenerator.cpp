@@ -13,14 +13,14 @@ void GenerateProblem(const char* filename, int node_count, double conn_density, 
 	std::ofstream stream(filename, std::ios_base::trunc);
 	stream << node_count << "\n";
 
-	int c = node_count * node_count * conn_density;
-	int index_max = node_count - 1;
-	while (c-- > 0) {
-		int from = RANDINT(index_max);
-		int to = RANDINT(index_max);
-		if (from == to) continue;
 
-		stream << from+1 << " " << to+1 << "\n";
+	// Generates 1-based undirected edges
+	for (int from = 1; from <= node_count; from++) {
+		for (int to = from + 1; to <= node_count; to++) {
+			if ((double)rand() / RAND_MAX < conn_density) {
+				stream << from << " " << to << "\n";
+			}
+		}
 	}
 
 	stream.close();

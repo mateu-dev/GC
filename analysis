@@ -1,0 +1,12 @@
+zachłanne kolorowanie grafu
+
+w jakiej kolejności odwiedzić wierzchołki? prosta wersja - według kolejności z pliku
+przy każdym wierzchołku zanim nadamy mu kolor musimy sprawdzić czy wierzchołki obok mają ten sam kolor
+przechodzimy po kolei po do tej pory nadanych kolorach i jak nie możemy użyć żadnego z nich to nadajemy nowy kolor
+wypisujemy po kolei wierzchołki i ich nadane kolory oraz ile użyliśmy kolorów
+
+w jakiej formie to rozwiązanie?
+    importowana funkcja?
+    edytować klasę Graph?
+    funkcja, która zakłada, że tymczasowe T przechowuje kolor?
+    

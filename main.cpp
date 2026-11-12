@@ -1,77 +1,46 @@
 #include "Graph.h"
 #include "Measure.h"
-#include "json.hpp"
-#include <cstdlib>
+#include "Node.h"
+#include "ProblemGenerator.h"
+#include "TabuSearch.h"
 #include <iostream>
-#include <vector>
-
-struct Node :public _Base {
-	int color{ 0 };
-	Node() = default;
-
-	nlohmann::json Serialize() override {
-		nlohmann::json json;
-		json["color"] = color;
-		return json;
-	}
-};
+#include <filesystem>
+#include <algorithm>
 
 // Change graph type here
 #define Graph Graph<Node>
 
-int GC(Graph* graph) {
-	const int node_count = graph->GetNodeCount();
-
-	// We know the answers right away for size 1 and 2
-	if (node_count <= 2) {
-		if (node_count == 1) return 1;
-		else if (graph->ExistsEdge(0, 1)) return 2;
-	}
-
-	graph->GetNode(0)->color = 0; // We dont have to check the neighbors of the first node.
-
-	int color_count = 1;
-	for (int i = 1;i < node_count;i++) {
-		std::vector<bool> used_colors{ false };
-		used_colors.resize(node_count);
-
-		// Find used colors
-		auto neighbors = graph->GetNeighborNodes(i);
-		for (Node* neighbor : neighbors) {
-			int neighbor_color = neighbor->color;
-			if (neighbor_color >= 0)
-				used_colors[neighbor_color] = true;
-		}
-
-		for (int j = 0;j < node_count;j++) {
-			if (!used_colors[j]) {
-				graph->GetNode(i)->color = j;
-
-				// color count is 1 more than index
-				int estimated_color_count = j + 1;
-				// max(color_count,estimated_color_count)
-				color_count = color_count < estimated_color_count ? estimated_color_count : color_count;
-				break;
-			}
-		}
-	}
-
-	return color_count;
-}
-
 int main(int argc, char* argv[]) {
-	const char* filename = "./problems/graph_20.txt"; // argv[1];
+    // If an argument is provided, use it; otherwise fallback to default file
+    const char* filename = (argc > 1) ? argv[1] : "input/graph_20.txt";
+    std::cout << "File: " << filename << std::endl;
 
-	auto graph = Graph::LoadGraph(filename, true);
-	int result{};
-	std::cout << "Time: " << MeasureTime([&] {
-		// Run algorithm here
-		result = GC(graph);
-		}) << "ms\n";
-	std::cout << "Result: " << result << std::endl;
+    auto graph = Graph::LoadGraph(filename);
+    if (!graph) {
+        std::cerr << "Error: Could not load graph from " << filename << std::endl;
+        return 1;
+    }
 
-	// Show graph in browser
-	graph->ExportAndView();
+    // Instantiate TabuSearch with the graph and a tabu tenure length (e.g., 10)
+    TabuSearch tabuSearch(graph, 10);
 
-	return 0;
+    long long elapsed_time = MeasureTime([&] {
+        tabuSearch.run();
+    });
+
+    std::cout << "Time: " << elapsed_time << "ms\n";
+
+    int result = tabuSearch.GetUsedColors();
+    std::cout << "Colors amount: " << result << std::endl;
+
+    // Optional: Uncomment to inspect node coloring
+    /*
+    for (int i = 1; i <= node_count; i++) {
+        std::cout << "Node " << i << ": Color " << graph->GetNode(i)->color << "\n";
+    }
+    */
+
+    delete graph;
+
+    return 0;
 }

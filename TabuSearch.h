@@ -4,33 +4,31 @@
 #include "Graph.h"
 #include "Node.h"
 #include <vector>
-#include <climits>
-#include <algorithm>
 
 using GraphType = Graph<Node>;
 
 class TabuSearch {
-    int dlugosc_tabu;
-    GraphType* graph;
-    int used_colors{ 0 };
-    int global_collisions{ 0 };
-    int iterations_limit{ 1000 };
+	int dlugosc_tabu;
+	GraphType* graph;
+	int used_colors{ 0 };
+	int global_collisions{ 0 };
+	int iterations_limit{ 1000 };
 
-    // Helper methods
-    int CalculateCollisions();
-    void CompactColors();
-    void SaveColoring(std::vector<int>& dest);
-    void RestoreColoring(const std::vector<int>& src);
-    bool TabuCore();
+	// Helper methods
+	int CalculateCollisions();
+	void CompactColors();
+	void SaveColoring(std::vector<int>& dest);
+	void RestoreColoring(const std::vector<int>& src);
+	bool TabuCore();
 
 public:
-    TabuSearch(GraphType* graph);
-    TabuSearch(GraphType* graph, int dlugosc_tabu);
+	TabuSearch(GraphType* graph);
+	TabuSearch(GraphType* graph, int dlugosc_tabu);
 
-    void GreedyColoring();
-    void ReduceColors();
-    GraphType* run();
-    int GetUsedColors();
+	void GreedyColoring();
+	void ReduceColors();
+	GraphType* run();
+	int GetUsedColors();
 };
 
 #endif // TABUSEARCH_H

@@ -142,12 +142,15 @@
     <ClInclude Include="Graph.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="Measure.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="options.h" />
+    <ClInclude Include="TabuSearch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProblemGenerator.cpp" />
     <ClCompile Include="ProblemGenerator.h" />
+    <ClCompile Include="TabuSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="test_input.txt" />

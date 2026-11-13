@@ -30,7 +30,9 @@ int main(int argc, char* argv[]) {
 	int result = tabuSearch.GetUsedColors();
 	std::cout << "Colors used: " << result << std::endl;
 
-	graph->ExportAndView();
+	if (graph->GetNodeCount() < 100)
+		graph->ExportAndView();
+	else graph->Export("./export/graph.json");
 
 	delete graph;
 

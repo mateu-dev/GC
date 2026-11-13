@@ -26,7 +26,7 @@ protected:
 	T* nodes{ nullptr }; // Graph owns node instances
 	bool* adjacency_matrix;
 
-	bool IsInRange(const int& index) { return index > 0 && index <= node_count; }
+	bool IsInRange(const int& index) { return index >= 0 && index < node_count; }
 public:
 	static Graph<T>* LoadGraph(const char* filename, const bool file_indexed_from_one = false);
 
@@ -144,9 +144,9 @@ T* Graph<T>::GetNode(const int& index) {
 TEMPLATE
 void Graph<T>::SetNode(const int& index, const T& node) {
 	if constexpr (!std::is_void_v<T>) {
-		if (index < 1 || index > node_count)
+		if (index < 0 || index >= node_count)
 			return;
-		nodes[index - 1] = node;
+		nodes[index] = node;
 	}
 }
 

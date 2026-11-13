@@ -53,7 +53,7 @@ void TabuSearch::CompactColors() {
 
 void TabuSearch::SaveColoring(std::vector<int>& dest) {
 	int node_count = graph->GetNodeCount();
-	if (dest.size() <= (size_t)node_count) dest.resize(node_count + 1);
+	if (dest.size() != (size_t)node_count) dest.resize(node_count);
 	for (int i = 0; i < node_count; i++) {
 		dest[i] = graph->GetNode(i)->color;
 	}
@@ -155,15 +155,15 @@ bool TabuSearch::TabuCore() {
 	global_collisions = CalculateCollisions();
 	if (global_collisions == 0) return true;
 
-	std::vector<std::vector<int>> tabu_matrix(node_count + 1, std::vector<int>(used_colors + 1, 0));
+	std::vector<std::vector<int>> tabu_matrix(node_count, std::vector<int>(used_colors + 1, 0));
 
 	int min_historical_collisions = global_collisions;
 	int current_global_collisions = global_collisions;
 
 	for (int iteration = 1; iteration <= iterations_limit; iteration++) {
 		int min_global_collisions = INT_MAX;
-		int min_global_collisions_node = 1;
-		int min_global_collisions_color = graph->GetNode(1)->color;
+		int min_global_collisions_node = 0;
+		int min_global_collisions_color = graph->GetNode(0)->color;
 
 		for (int node = 0; node < node_count; node++) {
 			Node* current_node = graph->GetNode(node);

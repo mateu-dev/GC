@@ -1,33 +1,50 @@
 #ifndef TABUSEARCH_H
 #define TABUSEARCH_H
 
-#include "Graph.h"
-#include "Node.h"
 #include <vector>
+#include "options.h"
 
-using GraphType = Graph<Node>;
 
-class TabuSearch {
-	int dlugosc_tabu;
-	GraphType* graph;
+class GCAlgorithmInstance {
+protected:
+	std::vector<std::vector<int>> color_lookup;
+	Graph_& graph;
+
+	int collisions{ 0 };
+
+	GCAlgorithmInstance(Graph_& graph) : graph(graph) {
+		const int node_count = graph.GetNodeCount();
+		color_lookup.resize(node_count, std::vector<int>(node_count, 0));
+	}
+	virtual void run() = 0;
+	// Utilities
+	int CalculateCollisions();
+	void ChangeColor(int node_index, int new_color);
+public:
+	void operator ()() {
+		collisions = CalculateCollisions();
+		this->run();
+	}
+};
+
+class TabuSearch : public GCAlgorithmInstance {
+	int dlugosc_tabu{ 10 };
 	int used_colors{ 0 };
-	int global_collisions{ 0 };
 	int iterations_limit{ 1000 };
 
 	// Helper methods
-	int CalculateCollisions();
 	void CompactColors();
 	void SaveColoring(std::vector<int>& dest);
 	void RestoreColoring(const std::vector<int>& src);
 	bool TabuCore();
 
+protected:
+	void run() override;
 public:
-	TabuSearch(GraphType* graph);
-	TabuSearch(GraphType* graph, int dlugosc_tabu);
+	TabuSearch(Graph_& graph, int dlugosc_tabu = 10);
 
 	void GreedyColoring();
 	void ReduceColors();
-	GraphType* run();
 	int GetUsedColors();
 };
 

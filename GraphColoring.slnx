@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="GraphColoring.vcxproj" Id="11a77d7d-79e7-4817-9238-f652c0478120" />
+</Solution>

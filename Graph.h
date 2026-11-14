@@ -23,8 +23,11 @@ class Graph
 protected:
 	int node_count;
 
-	T* nodes{ nullptr }; // Graph owns node instances
+	std::vector<std::unique_ptr<T>> nodes{ nullptr };
 	bool* adjacency_matrix;
+
+	std::vector<std::vector<int>> index_adjacency_list;
+	std::vector<std::vector<T*>> node_adjacency_list;
 
 	bool IsInRange(const int& index) { return index >= 0 && index < node_count; }
 public:
@@ -36,14 +39,13 @@ public:
 	int GetNodeCount() const { return node_count; }
 
 	void AddEdge(const int& from, const int& to);
-	void RemoveEdge(const int& from, const int& to);
 	bool ExistsEdge(const int& from, const int& to);
 
-	std::vector<int> GetNeighborIndexes(const int& index);
+	const std::vector<int>& GetNeighborIndexes(const int& index);
 
 	T* GetNode(const int& index);
 	void SetNode(const int& index, const T& node);
-	std::vector<T*> GetNeighborNodes(const int& index);
+	const std::vector<T*>& GetNeighborNodes(const int& index);
 
 	void Export(const char* filename, const bool export_as_js = false);
 	void ExportAndView();
@@ -76,17 +78,17 @@ inline Graph<T>::Graph(const int& node_count) :
 	node_count(node_count),
 	adjacency_matrix(new bool[node_count * node_count] {false})
 {
-	if constexpr (!std::is_void_v<T>)
-		nodes = new T[node_count]{};
-}
 
-TEMPLATE
-Graph<T>::~Graph()
-{
-	delete[] adjacency_matrix;
+	index_adjacency_list.resize(node_count);
+	for (int i = 0;i < node_count;i++)
+		index_adjacency_list[i].reserve(node_count);
 
-	if constexpr (!std::is_void_v<T>)
-		delete[] nodes;
+	if constexpr (!std::is_void_v<T>) {
+		node_adjacency_list.resize(node_count);
+		for (int i = 0;i < node_count;i++)
+			node_adjacency_list[i].resize(node_count);
+	}
+
 }
 
 TEMPLATE
@@ -99,15 +101,6 @@ void Graph<T>::AddEdge(const int& from, const int& to)
 }
 
 TEMPLATE
-void Graph<T>::RemoveEdge(const int& from, const int& to)
-{
-	if (!IsInRange(from) || !IsInRange(to)) return;
-
-	adjacency_matrix[from * node_count + to] = 0;
-	adjacency_matrix[to * node_count + from] = 0;
-}
-
-TEMPLATE
 bool Graph<T>::ExistsEdge(const int& from, const int& to)
 {
 	if (!IsInRange(from) || !IsInRange(to))
@@ -117,18 +110,10 @@ bool Graph<T>::ExistsEdge(const int& from, const int& to)
 }
 
 TEMPLATE
-std::vector<int> Graph<T>::GetNeighborIndexes(const int& index)
+const std::vector<int>& Graph<T>::GetNeighborIndexes(const int& index)
 {
-	std::vector<int> neighbors;
-	neighbors.reserve(node_count);
-	if (!IsInRange(index)) return neighbors;
-
-	for (int i = 0; i < node_count; i++) {
-		if (adjacency_matrix[index * node_count + i]) {
-			neighbors.push_back(i);
-		}
-	}
-	return neighbors;
+	if (!IsInRange(index)) throw "Index out of range";
+	return index_adjacency_list[index];
 }
 
 TEMPLATE
@@ -144,24 +129,17 @@ T* Graph<T>::GetNode(const int& index) {
 TEMPLATE
 void Graph<T>::SetNode(const int& index, const T& node) {
 	if constexpr (!std::is_void_v<T>) {
-		if (index < 0 || index >= node_count)
+		if (!IsInRange(index))
 			return;
 		nodes[index] = node;
 	}
 }
 
 TEMPLATE
-std::vector<T*> Graph<T>::GetNeighborNodes(const int& index)
+const std::vector<T*>& Graph<T>::GetNeighborNodes(const int& index)
 {
-	std::vector<T*> neighbors;
-	neighbors.reserve(node_count);
-	if (index < 0 || index >= node_count) return neighbors;
-
-	for (int i = 0; i < node_count; i++) {
-		if (ExistsEdge(index, i))
-			neighbors.push_back(GetNode(i));
-	}
-	return neighbors;
+	if (!IsInRange(index)) throw "Index out of range";
+	return node_adjacency_list[index];
 }
 
 TEMPLATE

@@ -23,8 +23,8 @@ class Graph
 protected:
 	int node_count;
 
-	std::vector<std::unique_ptr<T>> nodes{ nullptr };
-	bool* adjacency_matrix;
+	T* nodes;
+	bool** adjacency_matrix;
 
 	std::vector<std::vector<int>> index_adjacency_list;
 	std::vector<std::vector<T*>> node_adjacency_list;
@@ -76,19 +76,35 @@ Graph<T>* Graph<T>::LoadGraph(const char* filename, const bool indexed_from_one)
 TEMPLATE
 inline Graph<T>::Graph(const int& node_count) :
 	node_count(node_count),
-	adjacency_matrix(new bool[node_count * node_count] {false})
+	adjacency_matrix(new bool* [node_count])
 {
 
 	index_adjacency_list.resize(node_count);
-	for (int i = 0;i < node_count;i++)
+	for (int i = 0; i < node_count; i++) {
+		adjacency_matrix[i] = new bool[node_count] {false};
 		index_adjacency_list[i].reserve(node_count);
-
-	if constexpr (!std::is_void_v<T>) {
-		node_adjacency_list.resize(node_count);
-		for (int i = 0;i < node_count;i++)
-			node_adjacency_list[i].resize(node_count);
 	}
 
+	if constexpr (!std::is_void_v<T>) {
+		nodes = new T[node_count]{};
+		node_adjacency_list.resize(node_count);
+		for (int i = 0; i < node_count; i++) {
+			node_adjacency_list[i].reserve(node_count);
+		}
+	}
+
+}
+
+TEMPLATE
+inline Graph<T>::~Graph()
+{
+	for (int i = 0; i < node_count; i++)
+		delete[] adjacency_matrix[i];
+	delete[] adjacency_matrix;
+
+	if constexpr (!std::is_void_v<T>) {
+		delete[] nodes;
+	}
 }
 
 TEMPLATE
@@ -96,8 +112,16 @@ void Graph<T>::AddEdge(const int& from, const int& to)
 {
 	if (!IsInRange(from) || !IsInRange(to)) return;
 
-	adjacency_matrix[from * node_count + to] = 1;
-	adjacency_matrix[to * node_count + from] = 1;
+	adjacency_matrix[from][to] = 1;
+	adjacency_matrix[to][from] = 1;
+
+	index_adjacency_list[from].push_back(to);
+	index_adjacency_list[to].push_back(from);
+
+	if constexpr (!std::is_void_v<T>) {
+		node_adjacency_list[from].push_back(GetNode(to));
+		node_adjacency_list[to].push_back(GetNode(from));
+	}
 }
 
 TEMPLATE
@@ -106,7 +130,7 @@ bool Graph<T>::ExistsEdge(const int& from, const int& to)
 	if (!IsInRange(from) || !IsInRange(to))
 		return false;
 
-	return adjacency_matrix[from * node_count + to];
+	return adjacency_matrix[from][to];
 }
 
 TEMPLATE

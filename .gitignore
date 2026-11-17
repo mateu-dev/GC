@@ -51,3 +51,5 @@ export/*.js
 GraphColoring.vcxproj
 GraphColoring.vcxproj.filters
 cpp.hint
+
+CMakeLists.txt

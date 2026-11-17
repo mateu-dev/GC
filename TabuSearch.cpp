@@ -161,7 +161,9 @@ void TabuSearch::ReduceColors() {
 		}
 	}
 
-	used_colors--;
+	// Compact immediately while used_colors still reflects the max color ID (8),
+	// so CompactColors() sees all colors 1..8 and updates used_colors to 7.
+	CompactColors();
 }
 
 bool TabuSearch::TabuCore() {

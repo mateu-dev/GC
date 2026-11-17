@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]) {
 	// If an argument is provided, use it; otherwise fallback to default file
-	const char* filename = (argc > 1) ? argv[1] : "input/gc_1000.txt";
+	const char* filename = (argc > 1) ? argv[1] : "input/queen6.txt";
 	std::cout << "File: " << filename << std::endl;
 
 	auto graph = Graph_::LoadGraph(filename, true);

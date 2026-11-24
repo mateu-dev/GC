@@ -15,6 +15,7 @@ protected:
 	int collisions{ 0 };
 
 	Clock::time_point timeStart{};
+	Clock::duration timeLastImprovement{ Clock::duration::zero() };
 	Clock::duration timeResult{ Clock::duration::zero() };
 	Clock::duration timeLimit{ std::chrono::minutes(3) };
 
@@ -55,6 +56,7 @@ public:
 	void ReduceColors();
 	int GetUsedColors();
 	int GetIterations() const { return iterations; }
+	Clock::duration GetTimeLastImprovement() const { return timeLastImprovement; }
 	Clock::duration GetTimeResult() const { return timeResult; }
 };
 

@@ -22,7 +22,9 @@ int main(int argc, char* argv[]) {
 		tabuSearch();
 		});
 
-	std::cout << "Time: " << elapsed_time << "ms\n";
+	std::cout << "Time around tabuSearch(): " << elapsed_time << "ms\n";
+	std::cout << "Time returned by GetTimeResult(): " << tabuSearch.GetTimeResult() << "\n";
+	std::cout << "Time returned by GetTimeLastImprovement(): " << tabuSearch.GetTimeLastImprovement() << "\n";
 
 	int result = tabuSearch.GetUsedColors();
 	std::cout << "Colors used: " << result << std::endl;

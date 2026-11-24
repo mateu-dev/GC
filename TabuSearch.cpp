@@ -285,6 +285,7 @@ void TabuSearch::run() {
 			// in case it naturally eliminated another color, then save state.
 			CompactColors();
 			best_valid_colors = used_colors;
+			timeLastImprovement = Clock::now() - timeStart;
 			SaveColoring(best_coloring);
 		}
 		else {

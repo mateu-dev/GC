@@ -1,20 +1,8 @@
 #include "Node.h"
 #include "options.h"
 #include "TabuSearch.h"
-#include <chrono>
 #include <climits>
 #include <vector>
-
-namespace {
-struct TimerGuard {
-	std::chrono::steady_clock::time_point start;
-	std::chrono::steady_clock::duration& result;
-
-	~TimerGuard() {
-		result = std::chrono::steady_clock::now() - start;
-	}
-};
-}
 
 int GCAlgorithmInstance::CalculateCollisions() {
 	int node_count = graph.GetNodeCount();
@@ -102,6 +90,17 @@ void TabuSearch::GreedyColoring() {
 	int node_count = graph.GetNodeCount();
 	used_colors = 0;
 
+	// Each row stores neighbor counts by color. Color IDs are 1-based and can
+	// reach node_count, so the row needs node_count + 1 slots (including color 0).
+	color_lookup.assign(node_count, std::vector<int>(node_count + 1, 0));
+	for (int i = 0; i < node_count; i++) {
+		for (int neighbor : graph.GetNeighborIndexes(i)) {
+			int neighbor_color = graph.GetNode(neighbor)->color;
+			if (neighbor_color >= 0 && neighbor_color <= node_count)
+				++color_lookup[i][neighbor_color];
+		}
+	}
+
 	for (int i = 0; i < node_count; i++) {
 		std::vector<int> neighbors = graph.GetNeighborIndexes(i);
 		Node* current_node = graph.GetNode(i);
@@ -187,13 +186,10 @@ bool TabuSearch::TabuCore() {
 
 	int min_historical_collisions = collisions;
 	int current_global_collisions = collisions;
-	const auto deadline = timeStart + timeLimit - std::chrono::seconds(1);
 
 	int iteration = 1;
 	while (true) {
-		if (Clock::now() >= deadline) {
-			break;
-		}
+		if (!run_condition->ShouldContinue()) break;
 
 		int best_candidate_collisions = INT_MAX;
 		int best_candidate_node = 0;
@@ -241,7 +237,7 @@ bool TabuSearch::TabuCore() {
 		}
 
 		iteration++;
-		iterations++;
+		run_condition->IterationCompleted();
 
 		if (current_global_collisions == 0) {
 			collisions = 0;
@@ -254,11 +250,6 @@ bool TabuSearch::TabuCore() {
 }
 
 void TabuSearch::run() {
-	timeStart = Clock::now();
-	TimerGuard guard{ timeStart, timeResult };
-
-	iterations = 0;
-
 	GreedyColoring();
 	CompactColors();
 
@@ -266,12 +257,17 @@ void TabuSearch::run() {
 	std::vector<int> best_coloring;
 	SaveColoring(best_coloring);
 
+
+	auto stop_algorithm = [&]() {
+		RestoreColoring(best_coloring);
+		used_colors = best_valid_colors;
+		collisions = CalculateCollisions();
+		};
+
 	// Outer loop to continuously reduce colors and attempt Tabu optimization
 	while (used_colors > 1) {
-		if (Clock::now() >= timeStart + timeLimit - std::chrono::seconds(1)) {
-			RestoreColoring(best_coloring);
-			used_colors = best_valid_colors;
-			collisions = CalculateCollisions();
+		if (!run_condition->ShouldContinue()) {
+			stop_algorithm();
 			break;
 		}
 
@@ -285,15 +281,11 @@ void TabuSearch::run() {
 			// in case it naturally eliminated another color, then save state.
 			CompactColors();
 			best_valid_colors = used_colors;
-			timeLastImprovement = Clock::now() - timeStart;
 			SaveColoring(best_coloring);
+			run_condition->ImprovementFound();
 		}
 		else {
-			// Failed to find valid coloring at this color count (or timed out);
-			// revert to the last successful coloring and stop.
-			RestoreColoring(best_coloring);
-			used_colors = best_valid_colors;
-			collisions = CalculateCollisions();
+			stop_algorithm();
 			break;
 		}
 	}

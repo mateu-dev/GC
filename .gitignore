@@ -49,6 +49,7 @@ export/*.js
 .vscode
 
 GraphColoring.vcxproj
+!GraphColoring.vcxproj
 GraphColoring.vcxproj.filters
 cpp.hint
 

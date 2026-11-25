@@ -36,7 +36,7 @@ public:
 };
 
 class TabuSearch : public GCAlgorithmInstance {
-	int dlugosc_tabu{ 10 };
+	int dlugosc_tabu{ 1 };
 	int used_colors{ 0 };
 	int iterations{ 0 };
 
@@ -50,7 +50,7 @@ protected:
 	void run() override;
 
 public:
-	TabuSearch(Graph_& graph, int dlugosc_tabu = 10);
+	TabuSearch(Graph_& graph);
 
 	void GreedyColoring();
 	void ReduceColors();

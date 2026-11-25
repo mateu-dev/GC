@@ -96,7 +96,7 @@ void TabuSearch::RestoreColoring(const std::vector<int>& src) {
 }
 
 
-TabuSearch::TabuSearch(Graph_& graph, int dlugosc_tabu) : GCAlgorithmInstance(graph), dlugosc_tabu(dlugosc_tabu) {}
+TabuSearch::TabuSearch(Graph_& graph) : GCAlgorithmInstance(graph) {}
 
 void TabuSearch::GreedyColoring() {
 	int node_count = graph.GetNodeCount();

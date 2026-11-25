@@ -4,6 +4,7 @@
 #include <chrono>
 #include <vector>
 #include "options.h"
+#include "StopConditions.h"
 
 class GCAlgorithmInstance {
 protected:
@@ -14,10 +15,7 @@ protected:
 
 	int collisions{ 0 };
 
-	Clock::time_point timeStart{};
-	Clock::duration timeLastImprovement{ Clock::duration::zero() };
-	Clock::duration timeResult{ Clock::duration::zero() };
-	Clock::duration timeLimit{ std::chrono::minutes(3) };
+	std::unique_ptr<RunCondition> run_condition = std::make_unique<IterationLimitCondition>(1000);
 
 	GCAlgorithmInstance(Graph_& graph) : graph(graph) {
 		const int node_count = graph.GetNodeCount();
@@ -31,6 +29,7 @@ protected:
 public:
 	void operator ()() {
 		collisions = CalculateCollisions();
+		run_condition->Reset();
 		this->run();
 	}
 };
@@ -38,7 +37,6 @@ public:
 class TabuSearch : public GCAlgorithmInstance {
 	int dlugosc_tabu{ 1 };
 	int used_colors{ 0 };
-	int iterations{ 0 };
 
 	// Helper methods
 	void CompactColors();
@@ -55,9 +53,6 @@ public:
 	void GreedyColoring();
 	void ReduceColors();
 	int GetUsedColors();
-	int GetIterations() const { return iterations; }
-	Clock::duration GetTimeLastImprovement() const { return timeLastImprovement; }
-	Clock::duration GetTimeResult() const { return timeResult; }
 };
 
 #endif // TABUSEARCH_H

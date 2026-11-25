@@ -2,6 +2,7 @@
 
 #include "options.h"
 #include "sqlite3.h"
+#include <filesystem>
 #include <string>
 #include <stdexcept>
 
@@ -47,12 +48,26 @@ public:
 
 	int RegisterOrGetInput(const std::string& filename, int vertex_count, int optimal_result) {
 		sqlite3_stmt* stmt = nullptr;
-		if (sqlite3_prepare_v2(db, "SELECT _id FROM inputs WHERE filename = ?;", -1, &stmt, nullptr) != SQLITE_OK)
+		const std::string basename = std::filesystem::path(filename).filename().string();
+		if (sqlite3_prepare_v2(db, "SELECT _id FROM inputs WHERE filename = ? OR filename = ? ORDER BY CASE WHEN filename = ? THEN 0 ELSE 1 END LIMIT 1;", -1, &stmt, nullptr) != SQLITE_OK)
 			throw std::runtime_error("Could not prepare problem database lookup");
 		sqlite3_bind_text(stmt, 1, filename.c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt, 2, basename.c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt, 3, filename.c_str(), -1, SQLITE_TRANSIENT);
 		int step_result = sqlite3_step(stmt);
 		if (step_result == SQLITE_ROW) {
 			int id = sqlite3_column_int(stmt, 0);
+			sqlite3_finalize(stmt);
+			if (sqlite3_prepare_v2(db, "UPDATE inputs SET optimal_result = ?, vertex_count = ? WHERE _id = ?;", -1, &stmt, nullptr) != SQLITE_OK)
+				throw std::runtime_error("Could not prepare problem metadata update");
+			sqlite3_bind_int(stmt, 1, optimal_result);
+			sqlite3_bind_int(stmt, 2, vertex_count);
+			sqlite3_bind_int(stmt, 3, id);
+			if (sqlite3_step(stmt) != SQLITE_DONE) {
+				std::string error = sqlite3_errmsg(db);
+				sqlite3_finalize(stmt);
+				throw std::runtime_error("Could not update problem metadata: " + error);
+			}
 			sqlite3_finalize(stmt);
 			return id;
 		}

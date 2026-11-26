@@ -36,7 +36,7 @@ public:
 };
 
 class TabuSearch : public GCAlgorithmInstance {
-	int dlugosc_tabu{ 1 };
+	int dlugosc_tabu{ 10 };
 	int used_colors{ 0 };
 
 	// Statystyki przerw między kolejnymi nowymi (lepszymi) rozwiązaniami w run()

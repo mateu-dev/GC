@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porównanie eksperymentów — TabuSearch</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #162033;      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #334155;
+      --accent: #38bdf8;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.6rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+
+    .exp-headers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .exp-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .exp-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .exp-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .exp-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .exp-desc {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .summary-box {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .summary-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .summary-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      margin: 24px 0 10px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 9px 11px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+    }
+
+    thead th.group-a {
+      background: #172554;
+      color: #bfdbfe;
+      text-align: center;
+      border-bottom: 1px solid #3b82f6;
+    }
+
+    thead th.group-b {
+      background: #064e3b;
+      color: #a7f3d0;
+      text-align: center;
+      border-bottom: 1px solid #10b981;
+    }
+
+    thead th.group-base {
+      background: var(--panel-2);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    thead th.col-th {
+      background: var(--panel-2);
+      color: #e2e8f0;
+      font-weight: 600;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .better {
+      color: var(--good);
+      font-weight: 700;
+    }
+
+    .worse {
+      color: var(--bad);
+      font-weight: 700;
+    }
+
+    .equal {
+      color: var(--muted);
+    }
+
+    .null-val {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .error-box {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid var(--bad);
+      color: #fecaca;
+      padding: 16px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Porównanie eksperymentów TabuSearch</h1>
+    <div class="subtitle">Zestawienie kolorów, czasu, różnic (B − A) oraz maksymalnych przerw iteracji i czasu między nowymi rozwiązaniami.</div>
+
+    <div id="app"></div>
+  </div>
+
+  <script src="./exp_comparison.js"></script>
+  <script>
+    (function () {
+      const app = document.getElementById("app");
+      const data = window.EXP_COMPARISON_DATA;
+
+      if (!data || !data.experiment_a || !data.experiment_b) {
+        app.innerHTML = `<div class="error-box">
+          Brak danych w <code>./export/exp_comparison.js</code> (oczekiwano <code>window.EXP_COMPARISON_DATA</code>).
+          Uruchom program i wybierz opcję porównania dwóch eksperymentów.
+        </div>`;
+        return;
+      }
+
+      const expA = data.experiment_a;
+      const expB = data.experiment_b;
+      const resultsA = Array.isArray(expA.results) ? expA.results : [];
+      const resultsB = Array.isArray(expB.results) ? expB.results : [];
+
+      function esc(val) {
+        return String(val ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function fmtOptInt(val) {
+        return (val === null || val === undefined)
+          ? `<span class="null-val">NULL</span>`
+          : Number(val).toLocaleString("pl-PL");
+      }
+
+      function fmtOptTime(val) {
+        return (val === null || val === undefined)
+          ? `<span class="null-val">NULL</span>`
+          : Number(val).toFixed(4) + " s";
+      }
+
+      function fmtMs(val) {
+        if (val === null || val === undefined) return `<span class="null-val">-</span>`;
+        return Number(val).toFixed(2) + " ms";
+      }
+
+      function maxNullable(rows, key) {
+        let found = false;
+        let maxVal = -Infinity;
+        for (const r of rows) {
+          const v = r[key];
+          if (v !== null && v !== undefined && !Number.isNaN(Number(v))) {
+            found = true;
+            if (Number(v) > maxVal) maxVal = Number(v);
+          }
+        }
+        return found ? maxVal : null;
+      }
+
+      const maxIterA = maxNullable(resultsA, "max_iter_between");
+      const maxIterB = maxNullable(resultsB, "max_iter_between");
+      const maxTimeA = maxNullable(resultsA, "max_time_between");
+      const maxTimeB = maxNullable(resultsB, "max_time_between");
+
+      // Dopasowanie rezultatów po input_file_id (kolejność: najpierw z A, potem z B, jeśli brak w A)
+      const mapA = new Map();
+      for (const r of resultsA) {
+        if (!mapA.has(r.input_file_id)) mapA.set(r.input_file_id, r);
+      }
+      const mapB = new Map();
+      for (const r of resultsB) {
+        if (!mapB.has(r.input_file_id)) mapB.set(r.input_file_id, r);
+      }
+
+      const orderedInputIds = [];
+      const seenIds = new Set();
+      for (const r of resultsA) {
+        if (!seenIds.has(r.input_file_id)) {
+          seenIds.add(r.input_file_id);
+          orderedInputIds.push(r.input_file_id);
+        }
+      }
+      for (const r of resultsB) {
+        if (!seenIds.has(r.input_file_id)) {
+          seenIds.add(r.input_file_id);
+          orderedInputIds.push(r.input_file_id);
+        }
+      }
+
+      const headersHtml = `
+        <div class="exp-headers">
+          <div class="exp-card">
+            <div class="exp-badge">Eksperyment A (#${esc(expA.id)})</div>
+            <div class="exp-title">${esc(expA.short_name || "(bez nazwy)")}</div>
+            <div class="exp-meta">Data: ${esc(expA.created_at || "-")} · Rekordów: ${resultsA.length}</div>
+            <p class="exp-desc">${esc(expA.description || "")}</p>
+          </div>
+          <div class="exp-card">
+            <div class="exp-badge">Eksperyment B (#${esc(expB.id)})</div>
+            <div class="exp-title">${esc(expB.short_name || "(bez nazwy)")}</div>
+            <div class="exp-meta">Data: ${esc(expB.created_at || "-")} · Rekordów: ${resultsB.length}</div>
+            <p class="exp-desc">${esc(expB.description || "")}</p>
+          </div>
+        </div>
+      `;
+
+      const summaryHtml = `
+        <div class="summary-grid">
+          <div class="summary-box">
+            <div class="summary-label">Max iteracji między nowymi rozwiązaniami (A / B)</div>
+            <div class="summary-value">
+              ${maxIterA !== null ? Number(maxIterA).toLocaleString("pl-PL") : `<span class="null-val">NULL</span>`}
+              /
+              ${maxIterB !== null ? Number(maxIterB).toLocaleString("pl-PL") : `<span class="null-val">NULL</span>`}
+            </div>
+          </div>
+          <div class="summary-box">
+            <div class="summary-label">Max czas między nowymi rozwiązaniami (A / B)</div>
+            <div class="summary-value">
+              ${maxTimeA !== null ? Number(maxTimeA).toFixed(4) + " s" : `<span class="null-val">NULL</span>`}
+              /
+              ${maxTimeB !== null ? Number(maxTimeB).toFixed(4) + " s" : `<span class="null-val">NULL</span>`}
+            </div>
+          </div>
+        </div>
+      `;
+
+      const rowsHtml = orderedInputIds.map((inputId) => {
+        const a = mapA.get(inputId);
+        const b = mapB.get(inputId);
+        const refRow = a || b || {};
+
+        const filename = refRow.filename ? refRow.filename : `#${inputId}`;
+        const vertexCount = (refRow.vertex_count !== null && refRow.vertex_count !== undefined)
+          ? Number(refRow.vertex_count).toLocaleString("pl-PL")
+          : `<span class="null-val">-</span>`;
+        const optimalResult = (refRow.optimal_result !== null && refRow.optimal_result !== undefined)
+          ? Number(refRow.optimal_result).toLocaleString("pl-PL")
+          : `<span class="null-val">-</span>`;
+
+        let colorDiffHtml = `<span class="null-val">-</span>`;
+        let clsA = "";
+        let clsB = "";
+
+        if (a && b) {
+          const diff = b.num_colors_result - a.num_colors_result;
+          if (diff < 0) {
+            colorDiffHtml = `<span class="better">${diff}</span>`;
+            clsB = "better";
+            clsA = "worse";
+          } else if (diff > 0) {
+            colorDiffHtml = `<span class="worse">+${diff}</span>`;
+            clsA = "better";
+            clsB = "worse";
+          } else {
+            colorDiffHtml = `<span class="equal">0</span>`;
+            clsA = "equal";
+            clsB = "equal";
+          }
+        }
+
+        const timeDiffHtml = (a && b)
+          ? (() => {
+              const d = b.time_taken - a.time_taken;
+              const sign = d > 0 ? "+" : "";
+              const cls = d < 0 ? "better" : (d > 0 ? "worse" : "equal");
+              return `<span class="${cls}">${sign}${d.toFixed(2)} ms</span>`;
+            })()
+          : `<span class="null-val">-</span>`;
+
+        return `
+          <tr>
+            <td><strong>${esc(filename)}</strong></td>
+            <td>${vertexCount}</td>
+            <td>${optimalResult}</td>
+            <td class="${clsA}">${a ? a.num_colors_result : `<span class="null-val">-</span>`}</td>
+            <td>${a ? fmtMs(a.time_taken) : `<span class="null-val">-</span>`}</td>
+            <td>${a ? fmtOptInt(a.max_iter_between) : `<span class="null-val">-</span>`}</td>
+            <td>${a ? fmtOptTime(a.max_time_between) : `<span class="null-val">-</span>`}</td>
+            <td class="${clsB}">${b ? b.num_colors_result : `<span class="null-val">-</span>`}</td>
+            <td>${b ? fmtMs(b.time_taken) : `<span class="null-val">-</span>`}</td>
+            <td>${b ? fmtOptInt(b.max_iter_between) : `<span class="null-val">-</span>`}</td>
+            <td>${b ? fmtOptTime(b.max_time_between) : `<span class="null-val">-</span>`}</td>
+            <td>${colorDiffHtml}</td>
+            <td>${timeDiffHtml}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const comparisonTableHtml = `
+        <h2 class="section-title">Tabela porównawcza instancji</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="group-base" rowspan="2">Plik (filename)</th>
+                <th class="group-base" rowspan="2">Wierzchołki</th>
+                <th class="group-base" rowspan="2">Optymalny</th>
+                <th class="group-a" colspan="4">Eksperyment A: ${esc(expA.short_name || "#" + expA.id)}</th>
+                <th class="group-b" colspan="4">Eksperyment B: ${esc(expB.short_name || "#" + expB.id)}</th>
+                <th class="group-base" colspan="2">Różnica (B − A)</th>
+              </tr>
+              <tr>
+                <th class="col-th">Kolory</th>
+                <th class="col-th">Czas</th>
+                <th class="col-th">Max iter.</th>
+                <th class="col-th">Max czas</th>
+                <th class="col-th">Kolory</th>
+                <th class="col-th">Czas</th>
+                <th class="col-th">Max iter.</th>
+                <th class="col-th">Max czas</th>
+                <th class="col-th">Δ Kolory</th>
+                <th class="col-th">Δ Czas</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml || `<tr><td colspan="13" style="text-align:center;">Brak rekordów dla wybranych eksperymentów.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      function renderSingleExpTable(label, exp, rows) {
+        const body = rows.map((r) => `
+          <tr>
+            <td>${r.id}</td>
+            <td>${esc(r.filename || ("#" + r.input_file_id))}</td>
+            <td>${(r.vertex_count !== null && r.vertex_count !== undefined) ? Number(r.vertex_count).toLocaleString("pl-PL") : `<span class="null-val">-</span>`}</td>
+            <td>${(r.optimal_result !== null && r.optimal_result !== undefined) ? Number(r.optimal_result).toLocaleString("pl-PL") : `<span class="null-val">-</span>`}</td>
+            <td>${r.num_colors_result}</td>
+            <td>${fmtMs(r.time_taken)}</td>
+            <td>${fmtOptInt(r.max_iter_between)}</td>
+            <td>${fmtOptTime(r.max_time_between)}</td>
+          </tr>
+        `).join("");
+
+        return `
+          <h3 class="section-title">${esc(label)}: ${esc(exp.short_name || "#" + exp.id)} (${rows.length} rekordów)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="col-th">Result _id</th>
+                  <th class="col-th">filename</th>
+                  <th class="col-th">vertex_count</th>
+                  <th class="col-th">optimal_result</th>
+                  <th class="col-th">num_colors_result</th>
+                  <th class="col-th">time_taken</th>
+                  <th class="col-th">max_iter_between</th>
+                  <th class="col-th">max_time_between</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${body || `<tr><td colspan="8" style="text-align:center;">Brak wyników.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      app.innerHTML =
+        headersHtml +
+        summaryHtml +
+        comparisonTableHtml +
+        renderSingleExpTable("Rezultaty — Eksperyment A", expA, resultsA) +
+        renderSingleExpTable("Rezultaty — Eksperyment B", expB, resultsB);
+    })();
+  </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 #include "Node.h"
 #include "options.h"
 #include "TabuSearch.h"
+#include <algorithm>
+#include <chrono>
 #include <climits>
 #include <vector>
 
@@ -82,7 +84,6 @@ void TabuSearch::RestoreColoring(const std::vector<int>& src) {
 		ChangeColor(i, src[i]);
 	}
 }
-
 
 TabuSearch::TabuSearch(Graph_& graph) : GCAlgorithmInstance(graph) {}
 
@@ -237,6 +238,7 @@ bool TabuSearch::TabuCore() {
 		}
 
 		iteration++;
+		total_iterations++;
 		run_condition->IterationCompleted();
 
 		if (current_global_collisions == 0) {
@@ -250,6 +252,14 @@ bool TabuSearch::TabuCore() {
 }
 
 void TabuSearch::run() {
+	const auto start_time = Clock::now();
+	total_iterations = 0;
+	max_iter_between = 0;
+	max_time_between = 0.0;
+
+	int last_improvement_iter = 0;
+	auto last_improvement_time = start_time;
+
 	GreedyColoring();
 	CompactColors();
 
@@ -257,12 +267,11 @@ void TabuSearch::run() {
 	std::vector<int> best_coloring;
 	SaveColoring(best_coloring);
 
-
 	auto stop_algorithm = [&]() {
 		RestoreColoring(best_coloring);
 		used_colors = best_valid_colors;
 		collisions = CalculateCollisions();
-		};
+	};
 
 	// Outer loop to continuously reduce colors and attempt Tabu optimization
 	while (used_colors > 1) {
@@ -280,6 +289,17 @@ void TabuSearch::run() {
 			// If Tabu succeeded (0 collisions), compact colors further
 			// in case it naturally eliminated another color, then save state.
 			CompactColors();
+
+			const auto now = Clock::now();
+			const int iter_gap = total_iterations - last_improvement_iter;
+			const double time_gap = std::chrono::duration<double>(now - last_improvement_time).count();
+
+			max_iter_between = std::max(max_iter_between, iter_gap);
+			max_time_between = std::max(max_time_between, time_gap);
+
+			last_improvement_iter = total_iterations;
+			last_improvement_time = now;
+
 			best_valid_colors = used_colors;
 			SaveColoring(best_coloring);
 			run_condition->ImprovementFound();
@@ -293,4 +313,12 @@ void TabuSearch::run() {
 
 int TabuSearch::GetUsedColors() {
 	return used_colors;
+}
+
+int TabuSearch::GetMaxIterBetween() const {
+	return max_iter_between;
+}
+
+double TabuSearch::GetMaxTimeBetween() const {
+	return max_time_between;
 }

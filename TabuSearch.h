@@ -2,6 +2,7 @@
 #define TABUSEARCH_H
 
 #include <chrono>
+#include <memory>
 #include <vector>
 #include "options.h"
 #include "StopConditions.h"
@@ -38,6 +39,11 @@ class TabuSearch : public GCAlgorithmInstance {
 	int dlugosc_tabu{ 1 };
 	int used_colors{ 0 };
 
+	// Statystyki przerw między kolejnymi nowymi (lepszymi) rozwiązaniami w run()
+	int total_iterations{ 0 };
+	int max_iter_between{ 0 };
+	double max_time_between{ 0.0 };
+
 	// Helper methods
 	void CompactColors();
 	void SaveColoring(std::vector<int>& dest);
@@ -53,6 +59,8 @@ public:
 	void GreedyColoring();
 	void ReduceColors();
 	int GetUsedColors();
+	int GetMaxIterBetween() const;
+	double GetMaxTimeBetween() const;
 };
 
 #endif // TABUSEARCH_H

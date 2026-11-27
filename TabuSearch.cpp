@@ -1,9 +1,11 @@
 #include "Node.h"
-#include "options.h"
 #include "TabuSearch.h"
+#include "options.h"
 #include <algorithm>
 #include <chrono>
 #include <climits>
+#include <cstdlib>
+#include <ctime>
 #include <vector>
 
 int GCAlgorithmInstance::CalculateCollisions() {
@@ -23,6 +25,7 @@ int GCAlgorithmInstance::CalculateCollisions() {
 void GCAlgorithmInstance::ChangeColor(int node_index, int new_color)
 {
 	Node* node = graph.GetNode(node_index);
+	const int node_count = graph.GetNodeCount();
 	int old_color = node->color;
 
 	if (old_color == new_color) return;
@@ -40,7 +43,7 @@ void GCAlgorithmInstance::ChangeColor(int node_index, int new_color)
 }
 
 // Removes gaps in colors and detects if even fewer colors are actually used
-void TabuSearch::CompactColors() {
+void TabuSearch::RemapColors() {
 	int node_count = graph.GetNodeCount();
 	std::vector<bool> color_present(used_colors + 1, false);
 
@@ -70,18 +73,25 @@ void TabuSearch::CompactColors() {
 	used_colors = new_count;
 }
 
-void TabuSearch::SaveColoring(std::vector<int>& dest) {
+int GCAlgorithmInstance::SaveColoring() {
 	int node_count = graph.GetNodeCount();
-	if (dest.size() != (size_t)node_count) dest.resize(node_count);
+	std::vector<int> dest(node_count);
 	for (int i = 0; i < node_count; i++) {
 		dest[i] = graph.GetNode(i)->color;
 	}
+
+	saved_colorings.push_back(dest);
+	return saved_colorings.size() - 1;
 }
 
-void TabuSearch::RestoreColoring(const std::vector<int>& src) {
+void GCAlgorithmInstance::RestoreLastColoring() {
+	RestoreColoring(saved_colorings.size() - 1);
+}
+void GCAlgorithmInstance::RestoreColoring(const int& cid) {
 	int node_count = graph.GetNodeCount();
+	auto& save = saved_colorings[cid];
 	for (int i = 0; i < node_count; i++) {
-		ChangeColor(i, src[i]);
+		ChangeColor(i, save[i]);
 	}
 }
 
@@ -124,6 +134,23 @@ void TabuSearch::GreedyColoring() {
 			used_colors++;
 			ChangeColor(i, used_colors);
 		}
+	}
+}
+
+void TabuSearch::RandomColoring()
+{
+	srand(time(NULL));
+	int node_count = graph.GetNodeCount();
+
+	if (node_count == 0) {
+		used_colors = 0;
+		return;
+	}
+
+	used_colors = node_count;
+
+	for (int i = 0; i < node_count; ++i) {
+		ChangeColor(i, 1 + rand() % node_count);
 	}
 }
 
@@ -175,7 +202,7 @@ void TabuSearch::ReduceColors() {
 
 	// Compact immediately while used_colors still reflects the max color ID (8),
 	// so CompactColors() sees all colors 1..8 and updates used_colors to 7.
-	CompactColors();
+	RemapColors();
 }
 
 bool TabuSearch::TabuCore() {
@@ -261,17 +288,17 @@ void TabuSearch::run() {
 	auto last_improvement_time = start_time;
 
 	GreedyColoring();
-	CompactColors();
+	RemapColors();
 
 	int best_valid_colors = used_colors;
-	std::vector<int> best_coloring;
-	SaveColoring(best_coloring);
+	int coloring = SaveColoring();
+
 
 	auto stop_algorithm = [&]() {
-		RestoreColoring(best_coloring);
+		RestoreColoring(coloring);
 		used_colors = best_valid_colors;
 		collisions = CalculateCollisions();
-	};
+		};
 
 	// Outer loop to continuously reduce colors and attempt Tabu optimization
 	while (used_colors > 1) {
@@ -281,14 +308,14 @@ void TabuSearch::run() {
 		}
 
 		ReduceColors();
-		CompactColors();
+		RemapColors();
 
 		bool success = TabuCore();
 
 		if (success) {
 			// If Tabu succeeded (0 collisions), compact colors further
 			// in case it naturally eliminated another color, then save state.
-			CompactColors();
+			RemapColors();
 
 			const auto now = Clock::now();
 			const int iter_gap = total_iterations - last_improvement_iter;
@@ -301,7 +328,7 @@ void TabuSearch::run() {
 			last_improvement_time = now;
 
 			best_valid_colors = used_colors;
-			SaveColoring(best_coloring);
+			coloring = SaveColoring();
 			run_condition->ImprovementFound();
 		}
 		else {

@@ -29,8 +29,6 @@ protected:
 
 	bool IsInRange(const int& index) { return index >= 0 && index < node_count; }
 public:
-	static Graph<T>* LoadGraph(const char* filename, const bool file_indexed_from_one = false);
-
 	Graph(const int& node_count);
 	virtual ~Graph();
 
@@ -48,28 +46,6 @@ public:
 	void Export(const char* filename, const bool export_as_js = false);
 	void ExportAndView();
 };
-
-TEMPLATE
-Graph<T>* Graph<T>::LoadGraph(const char* filename, const bool indexed_from_one)
-{
-	std::ifstream file(filename);
-	if (!file.is_open()) throw "failed to open file";
-
-	int node_count;
-	if (!(file >> node_count) || node_count <= 0)
-		throw "Invalid graph";
-
-	auto graph = new Graph<T>(node_count);
-
-	int from, to;
-	while (file >> from >> to) {
-		if (indexed_from_one)
-			graph->AddEdge(from - 1, to - 1);
-		else graph->AddEdge(from, to);
-	}
-
-	return graph;
-}
 
 TEMPLATE
 inline Graph<T>::Graph(const int& node_count) :

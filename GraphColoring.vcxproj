@@ -87,6 +87,7 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Experiment.h" />
     <ClInclude Include="Graph.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="Measure.h" />
